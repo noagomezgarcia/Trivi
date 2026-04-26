@@ -5,28 +5,31 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.data.Categories
 import com.example.myapplication.data.Difficulties
 import com.example.myapplication.data.Question
-import com.example.myapplication.data.QuestionsRespository
+import com.example.myapplication.data.QuestionsRepository
 import com.example.myapplication.domain.QuestionProvider
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class GameScreenViewModel(private val category: Categories,
-                          private val difficulty: Difficulties) : ViewModel() {
-    private val provider = QuestionProvider(QuestionsRespository.questionList)
+class GameScreenViewModel(
+    private val category: Categories,
+    private val difficulty: Difficulties
+) : ViewModel() {
+
+    private val provider = QuestionProvider(QuestionsRepository.questionList)
 
     private var questionsForThisGame: List<Question> = emptyList()
     private var questionIndex = 0
     private var currentQuestion: Question? = null
 
-    //guardamos el trabajo del temporizador para poder cancelarlo
+    // Timer job reference so we can cancel it when needed
     private var timerJob: Job? = null
-    private val totalTime = 10f // 10s por pregunta
+    private val totalTime = 10f
 
-    //estados
+    // UI states
     private val _questionStatement = MutableStateFlow("")
     val questionStatement: StateFlow<String> = _questionStatement.asStateFlow()
 
@@ -42,37 +45,39 @@ class GameScreenViewModel(private val category: Categories,
     private val _timeLeft = MutableStateFlow(totalTime)
     val timeLeft: StateFlow<Float> = _timeLeft.asStateFlow()
 
-    //para la pantalla de result
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score.asStateFlow()
 
-    // NUEVO: Estado para saber la categoría de la pregunta actual
+    // Tracks the category of the current question to color the answer buttons
     private val _currentQuestionCategory = MutableStateFlow(category)
     val currentQuestionCategory: StateFlow<Categories> = _currentQuestionCategory.asStateFlow()
 
-    //saber cuando se ha acabado la partida y pasar a la result screen
+    // Holds the answer the user just selected, null when no answer is pending feedback
+    private val _selectedAnswer = MutableStateFlow<String?>(null)
+    val selectedAnswer: StateFlow<String?> = _selectedAnswer.asStateFlow()
+
+    // Exposes the correct answer so the UI can highlight it during feedback
+    private val _correctAnswer = MutableStateFlow<String?>(null)
+    val correctAnswer: StateFlow<String?> = _correctAnswer.asStateFlow()
+
+    // Signals that the game has ended and the result screen should be shown
     private val _isGameOver = MutableStateFlow(false)
     val isGameOver: StateFlow<Boolean> = _isGameOver.asStateFlow()
 
     init {
-
-        _isGameOver.value = false
-        _score.value = 0
         startGame()
-
     }
 
-    //inicia el juego y recibe la dificultad
     fun startGame(quantityOfQuestions: Int = 10) {
-        // 1. Limpiamos estados de control
         questionIndex = 0
         _score.value = 0
         _currentRound.value = 1
         _isGameOver.value = false
         _timeLeft.value = totalTime
-        timerJob?.cancel() //paramos cualquier timer viejo
+        _selectedAnswer.value = null
+        _correctAnswer.value = null
+        timerJob?.cancel()
 
-        // 2. Obtenemos preguntas nuevas
         questionsForThisGame = provider.getFilteredQuestions(
             categories = category,
             difficulties = difficulty,
@@ -81,7 +86,6 @@ class GameScreenViewModel(private val category: Categories,
 
         _totalRounds.value = questionsForThisGame.size
 
-        //crgamos la primera si hay preguntas
         if (questionsForThisGame.isNotEmpty()) {
             loadCurrentQuestion()
         } else {
@@ -89,58 +93,62 @@ class GameScreenViewModel(private val category: Categories,
         }
     }
 
-    private fun startTimer() {
-        //si había un temporizador anterior funcionando lo cancelamos
-        timerJob?.cancel()
-        _timeLeft.value = totalTime
-
-        //
-        timerJob = viewModelScope.launch {
-            while (_timeLeft.value > 0) {
-                delay(100L) //pausa de 100 milisegundos
-                _timeLeft.value -= 0.1f //restamos tiempo
-            }
-
-            //si salimos del bucle el tiempo llegó a 0
-            //lo tratamos como una respuesta incorrecta (enviamos texto vacío)
-            checkAnswer("")
-        }
-    }
-
-    //carga la pregunta actual y sus respuestas mezcladas
     private fun loadCurrentQuestion() {
         currentQuestion = questionsForThisGame[questionIndex]
-
         currentQuestion?.let { question ->
             _questionStatement.value = question.statement
             _answers.value = question.getShuffledAnswers()
-
-            // NUEVO: Actualizamos el estado con la categoría de la pregunta actual
             _currentQuestionCategory.value = question.categories
-
+            _correctAnswer.value = question.correctAnswer
+            _selectedAnswer.value = null
             startTimer()
         }
     }
 
-    //comprovamos si el usuario ha clicado en la respuesta correcta
-    fun checkAnswer(selectedAnswer: String) {
-        timerJob?.cancel() //parar el tiempo de inmediato
+    // Uses a start timestamp instead of subtracting fixed increments,
+    // which avoids drift caused by coroutine scheduling delays
+    private fun startTimer() {
+        timerJob?.cancel()
+        _timeLeft.value = totalTime
+        val startTime = System.currentTimeMillis()
 
-        val correctAnswer = currentQuestion?.correctAnswer
-        if (selectedAnswer == correctAnswer) {
-            _score.value += 1
+        timerJob = viewModelScope.launch {
+            while (true) {
+                delay(50L)
+                val elapsed = (System.currentTimeMillis() - startTime) / 1000f
+                val remaining = totalTime - elapsed
+                if (remaining <= 0f) {
+                    _timeLeft.value = 0f
+                    checkAnswer("")
+                    break
+                }
+                _timeLeft.value = remaining
+            }
         }
-        getNextQuestion()
     }
 
-    //avanza a la siguiente pregunta o finaliza el juego
+    fun checkAnswer(selected: String) {
+        timerJob?.cancel()
+        _selectedAnswer.value = selected
+
+        if (selected == currentQuestion?.correctAnswer) {
+            _score.value += 1
+        }
+
+        // Show feedback for 800ms before moving to the next question
+        viewModelScope.launch {
+            delay(800L)
+            _selectedAnswer.value = null
+            getNextQuestion()
+        }
+    }
+
     private fun getNextQuestion() {
         if (questionIndex < questionsForThisGame.size - 1) {
             questionIndex++
             _currentRound.value++
             loadCurrentQuestion()
         } else {
-            //activamos el flag
             _isGameOver.value = true
         }
     }

@@ -1,28 +1,25 @@
-package com.example.myapplication.ui.utils
-
-import androidx.compose.ui.graphics.Color
 import com.example.myapplication.data.Categories
 import com.example.myapplication.data.Difficulties
+import com.example.myapplication.ui.theme.CategoryColors
+import com.example.myapplication.ui.theme.DifficultyColors
 
-// Le cambiamos el nombre para que no haya conflictos
-fun Categories.getCategoryColor(): Color {
+fun Categories.getCategoryColor(): androidx.compose.ui.graphics.Color {
     return when (this) {
-        Categories.ALL -> Color(0xFF607D8B)
-        Categories.HISTORY -> Color(0xFF795548)
-        Categories.SCIENCE -> Color(0xFF4CAF50)
-        Categories.SPORTS -> Color(0xFFFF9800)
-        Categories.GEOGRAPHY -> Color(0xFF2196F3)
-        Categories.ENTERTAINMENT -> Color(0xFFE91E63)
-        Categories.ART -> Color(0xFF9C27B0)
+        Categories.ALL          -> CategoryColors.All
+        Categories.HISTORY      -> CategoryColors.History
+        Categories.SCIENCE      -> CategoryColors.Science
+        Categories.SPORTS       -> CategoryColors.Sports
+        Categories.GEOGRAPHY    -> CategoryColors.Geography
+        Categories.ENTERTAINMENT -> CategoryColors.Entertainment
+        Categories.ART          -> CategoryColors.Art
     }
 }
 
-fun Difficulties.getDifficultyColor(): Color {
+fun Difficulties.getDifficultyColor():  androidx.compose.ui.graphics.Color {
     return when (this) {
-        Difficulties.ALL -> Color(0xFF607D8B)
-        Difficulties.EASY -> Color(0xFF4CAF50)   // Verde (Ajusta a tus colores reales)
-        Difficulties.MEDIUM -> Color(0xFFFF9800) // Naranja
-        Difficulties.DIFFICULT -> Color(0xFFF44336)   // Rojo
-        // Añade cualquier otra dificultad que tengas en tu enum
+        Difficulties.ALL       -> CategoryColors.All
+        Difficulties.EASY      -> DifficultyColors.Easy
+        Difficulties.MEDIUM    -> DifficultyColors.Medium
+        Difficulties.DIFFICULT -> DifficultyColors.Hard
     }
 }

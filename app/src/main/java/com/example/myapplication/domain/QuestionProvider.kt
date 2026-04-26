@@ -11,10 +11,6 @@ class QuestionProvider {
         this.allQuestions = questions
     }
 
-    /**
-     * Devuelve las preguntas filtradas.
-     * @param quantity El número máximo de preguntas a devolver (por defecto es 10).
-     */
     fun getFilteredQuestions(
         categories: Categories,
         difficulties: Difficulties,
@@ -26,7 +22,6 @@ class QuestionProvider {
 
             matchesCategory && matchesDifficulty
         }
-            .shuffled()        //mezclamos todas las que pasaron el filtro
-            .take(quantity)    //tomamos solo la cantidad que nos han pedido
-    }
+            .shuffled()
+            .take(quantity) }
 }

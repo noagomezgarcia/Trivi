@@ -6,7 +6,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,7 +14,8 @@ import com.airbnb.lottie.compose.*
 import com.example.myapplication.R
 import com.example.myapplication.data.Categories
 import com.example.myapplication.data.Difficulties
-import com.example.myapplication.ui.utils.*
+import getCategoryColor
+import getDifficultyColor
 
 @Composable
 fun MenuScreen(
@@ -36,7 +36,7 @@ fun MenuScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Text(
             text = "TRIVIAL",
@@ -50,7 +50,9 @@ fun MenuScreen(
         LottieAnimation(
             composition = composition,
             progress = { progress },
-            modifier = Modifier.size(220.dp).padding(vertical = 16.dp)
+            modifier = Modifier
+                .size(220.dp)
+                .padding(vertical = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -71,15 +73,22 @@ fun MenuScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = { navigateToGame(selectedCategory, selectedDifficulty) },
-            modifier = Modifier.fillMaxWidth(0.9f).height(90.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .height(90.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text(text = "PLAY", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = "PLAY",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
         }
+
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
@@ -96,7 +105,12 @@ fun CategoryDropdownMenu(
     val currentColor = selectedItem.getCategoryColor()
 
     Column(modifier = modifier) {
-        Text(text = "Category", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+        Text(
+            text = "Category",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -114,7 +128,9 @@ fun CategoryDropdownMenu(
                     unfocusedTextColor = currentColor
                 ),
                 textStyle = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
             )
             ExposedDropdownMenu(
                 expanded = expanded,
@@ -152,7 +168,13 @@ fun DifficultyDropdownMenu(
     val currentColor = selectedItem.getDifficultyColor()
 
     Column(modifier = modifier) {
-        Text(text = "Dificulty", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+        // Fixed typo: "Dificulty" -> "Difficulty"
+        Text(
+            text = "Difficulty",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -170,7 +192,9 @@ fun DifficultyDropdownMenu(
                     unfocusedTextColor = currentColor
                 ),
                 textStyle = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
             )
             ExposedDropdownMenu(
                 expanded = expanded,

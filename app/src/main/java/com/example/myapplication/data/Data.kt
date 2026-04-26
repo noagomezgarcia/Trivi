@@ -2,14 +2,14 @@ package com.example.myapplication.data
 
 data class Question(
     val statement: String,
-    val answers: MutableList<String>,
+    val answers: List<String>,
     val categories: Categories,
     val difficulties: Difficulties
 ) {
-    //La primera respuesta siempre es la correcta
+    // The first answer is always the right one.
     val correctAnswer: String = answers[0]
 
-    //Da las opciones desordenadas justo cuando la UI lo pide
+    // Gives the options disordered when the UI aks for it.
     fun getShuffledAnswers(): List<String> {
         return answers.shuffled()
     }

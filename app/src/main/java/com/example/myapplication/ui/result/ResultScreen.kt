@@ -17,13 +17,12 @@ fun ResultScreen(
     navigateToMenu: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     val context = LocalContext.current
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background) // BEIGE
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -47,38 +46,30 @@ fun ResultScreen(
             text = "$score",
             style = MaterialTheme.typography.displayLarge,
             fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onBackground // NEGRO
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(modifier = Modifier.height(48.dp))
 
         Button(
             onClick = {
-
-                val shareText = "I just got $score points in Trivial Pursuit! Can you beat me?"
-
-                //creamos un Intent de tipo ACTION_SEND (para enviar datos a otra app)
+                // Build a plain text share intent so the user can send
+                // their score to any app that accepts text (WhatsApp, Messages, etc.)
                 val sendIntent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    //le adjuntamos nuestro mensaje de texto
-                    putExtra(Intent.EXTRA_TEXT, shareText)
-                    //le decimos al sistema que el contenido es texto plano
+                    putExtra(Intent.EXTRA_TEXT, "I just got $score points in Trivi! Can you beat me?")
                     type = "text/plain"
                 }
 
-                // creamos un "Chooser" (Selector).
-                //esto fuerza a que aparezca el menú nativo de Android preguntando:
-                //"¿Con qué aplicación quieres compartir esto?" (WhatsApp, Mail, Mensajes...)
-                val shareIntent = Intent.createChooser(sendIntent, "Share your score")
-
-                //lanzamos la actividad usando el contexto que guardamos al principio
-                context.startActivity(shareIntent)
+                // The chooser forces Android to show the app picker
+                // instead of opening the last used app automatically
+                context.startActivity(Intent.createChooser(sendIntent, "Share your score"))
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary // Lila
+                containerColor = MaterialTheme.colorScheme.secondary
             )
         ) {
             Text(text = "SHARE SCORE", fontWeight = FontWeight.Bold)
@@ -92,7 +83,7 @@ fun ResultScreen(
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.tertiary // Rosa Return
+                contentColor = MaterialTheme.colorScheme.tertiary
             ),
             border = ButtonDefaults.outlinedButtonBorder.copy(width = 2.dp)
         ) {

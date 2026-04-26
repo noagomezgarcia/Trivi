@@ -17,7 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.data.Categories
 import com.example.myapplication.data.Difficulties
-import com.example.myapplication.ui.utils.*
+import getCategoryColor
+
 
 @Composable
 fun GameScreen(
@@ -36,17 +37,17 @@ fun GameScreen(
     val totalRounds by gameViewModel.totalRounds.collectAsStateWithLifecycle()
     val questionStatement by gameViewModel.questionStatement.collectAsStateWithLifecycle()
     val answers by gameViewModel.answers.collectAsStateWithLifecycle()
-    val timeLeft by gameViewModel.timeLeft.collectAsState()
+    val timeLeft by gameViewModel.timeLeft.collectAsStateWithLifecycle()
     val score by gameViewModel.score.collectAsStateWithLifecycle()
-
     val currentQuestionCategory by gameViewModel.currentQuestionCategory.collectAsStateWithLifecycle()
     val currentCategoryColor = currentQuestionCategory.getCategoryColor()
     val isGameOver by gameViewModel.isGameOver.collectAsStateWithLifecycle()
+    val selectedAnswer by gameViewModel.selectedAnswer.collectAsStateWithLifecycle()
+    val correctAnswer by gameViewModel.correctAnswer.collectAsStateWithLifecycle()
 
     LaunchedEffect(isGameOver) {
         if (isGameOver) {
-            val finalScore = gameViewModel.score.value
-            onGameFinished(finalScore)
+            onGameFinished(gameViewModel.score.value)
         }
     }
 
@@ -58,7 +59,6 @@ fun GameScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.weight(0.7f))
 
             Text(
@@ -93,10 +93,25 @@ fun GameScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         rowAnswers.forEach { answer ->
+                            /* Determine button color based on feedback state:
+                            - No answer selected yet: use the category color
+                            - This button is the correct answer: green
+                            - This button was the wrong answer selected: red
+                            - Any other button while feedback is showing: dimmed */
+                            val buttonColor = when {
+                                selectedAnswer == null -> currentCategoryColor
+                                answer == correctAnswer -> Color(0xFF4CAF50)
+                                answer == selectedAnswer -> Color(0xFFF44336)
+                                else -> currentCategoryColor
+                            }
+
                             AnswerButton(
                                 text = answer,
-                                containerColor = currentCategoryColor,
-                                onClick = { gameViewModel.checkAnswer(answer) },
+                                containerColor = buttonColor,
+                                // Block further clicks while feedback is visible
+                                onClick = {
+                                    if (selectedAnswer == null) gameViewModel.checkAnswer(answer)
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -126,7 +141,7 @@ fun AnswerButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.height(72.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
@@ -145,11 +160,15 @@ fun AnswerButton(
 }
 
 @Composable
-fun TimerProgressBar(timeLeft: Float, color: Color, totalTimeSeconds: Float = 10f) {
+fun TimerProgressBar(
+    timeLeft: Float,
+    color: Color,
+    totalTimeSeconds: Float = 10f
+) {
     val progress = timeLeft / totalTimeSeconds
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        label = "progress_animation"
+        label = "timer_progress"
     )
 
     LinearProgressIndicator(

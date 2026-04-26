@@ -1,6 +1,6 @@
 package com.example.myapplication.data
 
-object QuestionsRespository {
+object QuestionsRepository {
 
     val questionList = listOf(
 
